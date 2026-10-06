@@ -91,7 +91,7 @@
   .icon-badge{width:42px; height:42px; border-radius:50%; background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .icon-badge svg{width:21px; height:21px;}
   .section-title h2{font-size:clamp(21px,2.4vw,25px); font-weight:600;}
-  .intro-content > p{font-size:16px; max-width:640px;}
+  .intro-content > p{font-size:16px; max-width:none; text-align:justify; hyphens:auto; -webkit-hyphens:auto;}
   .cta-row{display:flex; flex-wrap:wrap; gap:12px; margin:22px 0 40px;}
   .btn{font-family:var(--font-body); font-weight:600; font-size:13.5px; text-decoration:none; padding:11px 18px; border-radius:var(--radius); display:inline-block; transition:background 0.2s ease, border-color 0.2s ease, color 0.2s ease;}
   .btn.solid{background:var(--btn); color:var(--btn-text);}
