@@ -358,9 +358,9 @@
     -webkit-mask-image:linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.9) 75%, #000 100%);
             mask-image:linear-gradient(100deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0.9) 75%, #000 100%);}
 
-  /* brand icons in the profile links (Font Awesome Free icons, CC BY 4.0) */
-  .social-btn.gs{--ic:#4285F4;} .social-btn.li{--ic:#0A66C2;} .social-btn.rg{--ic:#00A99D;} .social-btn.orcid{--ic:#A6CE39;}
+  /* brand icons in the profile links (Font Awesome Free icons, CC BY 4.0; Gmail mark from Simple Icons, CC0) */
+  .social-btn.gs{--ic:#4285F4;} .social-btn.li{--ic:#0A66C2;} .social-btn.rg{--ic:#00A99D;} .social-btn.orcid{--ic:#A6CE39;} .social-btn.gm{--ic:#EA4335;}
   [data-theme="dark"] .social-btn.li{--ic:#5AA9F0;}
-  .social-btn.gs, .social-btn.li, .social-btn.rg, .social-btn.orcid{color:var(--ic);}
-  .social-btn.gs:hover, .social-btn.li:hover, .social-btn.rg:hover, .social-btn.orcid:hover{color:var(--ic); border-color:var(--ic);}
-  .social-btn.gs svg, .social-btn.li svg, .social-btn.rg svg, .social-btn.orcid svg{width:17px; height:17px;}
+  .social-btn.gm, .social-btn.gs, .social-btn.li, .social-btn.rg, .social-btn.orcid{color:var(--ic);}
+  .social-btn.gm:hover, .social-btn.gs:hover, .social-btn.li:hover, .social-btn.rg:hover, .social-btn.orcid:hover{color:var(--ic); border-color:var(--ic);}
+  .social-btn.gm svg, .social-btn.gs svg, .social-btn.li svg, .social-btn.rg svg, .social-btn.orcid svg{width:17px; height:17px;}
