@@ -364,3 +364,12 @@
   .social-btn.gm, .social-btn.gs, .social-btn.li, .social-btn.rg, .social-btn.orcid{color:var(--ic);}
   .social-btn.gm:hover, .social-btn.gs:hover, .social-btn.li:hover, .social-btn.rg:hover, .social-btn.orcid:hover{color:var(--ic); border-color:var(--ic);}
   .social-btn.gm svg, .social-btn.gs svg, .social-btn.li svg, .social-btn.rg svg, .social-btn.orcid svg{width:17px; height:17px;}
+
+  /* v7: IELTS heading icon, research link in interests band, full-colour Gmail logo */
+  .group-label.with-icon{display:flex; align-items:center; gap:10px;}
+  .mini-badge{width:30px; height:30px; border-radius:50%; background:color-mix(in srgb, var(--accent) 10%, transparent); color:var(--accent); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mini-badge svg{width:16px; height:16px;}
+  .band-link{display:inline-block; margin:22px 0 0 56px; color:var(--on-deep); font-weight:600; font-size:15px; text-decoration:none; border-bottom:1.5px solid var(--on-deep-accent); padding-bottom:2px; transition:color 0.2s ease;}
+  .band-link:hover{color:var(--on-deep-accent);}
+  @media (max-width:640px){ .band-link{margin-left:0;} }
+  .social-btn.gm svg{width:19px; height:19px;}
