@@ -373,3 +373,10 @@
   .band-link:hover{color:var(--on-deep-accent);}
   @media (max-width:640px){ .band-link{margin-left:0;} }
   .social-btn.gm svg{width:19px; height:19px;}
+
+  /* v8: institution logos on education cards, IELTS report link */
+  .edu-card.with-logo{display:grid; grid-template-columns:64px 1fr; gap:0 20px; align-items:start;}
+  .edu-logo{width:64px; height:64px; object-fit:contain; border-radius:10px; background:#FFFFFF; padding:4px; border:1px solid var(--line);}
+  .edu-body{min-width:0;}
+  @media (max-width:560px){ .edu-card.with-logo{grid-template-columns:48px 1fr; gap:0 14px;} .edu-logo{width:48px; height:48px;} }
+  .ielts-note{font-size:14px; color:var(--text-muted); margin:14px 0 0;}
