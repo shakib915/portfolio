@@ -7,6 +7,7 @@
   var ctx = canvas.getContext('2d');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var SPEED = 1.6;   // drift speed multiplier (1 = original pace)
   var W = 0, H = 0, stones = [], sand = [], voids = [], colors = {}, running = false, visible = true, raf = 0;
 
   function hexToRgb(h){
@@ -36,7 +37,7 @@
       pts.push([Math.cos(ang) * rr, Math.sin(ang) * rr * rand(0.7, 1)]);
     }
     return { x: rand(0, W), y: rand(0, H), r: r, pts: pts, rot: rand(0, Math.PI * 2),
-             vr: rand(-0.0012, 0.0012), vx: rand(-0.09, 0.09), vy: rand(-0.06, 0.06),
+             vr: rand(-0.0012, 0.0012) * SPEED, vx: rand(-0.09, 0.09) * SPEED, vy: rand(-0.06, 0.06) * SPEED,
              fill: rand(0.045, 0.1), edge: rand(0.08, 0.16), accent: Math.random() < 0.12 };
   }
   function build(){
@@ -44,8 +45,8 @@
     stones = []; sand = []; voids = [];
     var ns = Math.round(area / 11000), ng = Math.round(area / 1400), nv = Math.round(area / 60000);
     for(var i = 0; i < ns; i++) stones.push(makeStone());
-    for(i = 0; i < ng; i++) sand.push({ x: rand(0, W), y: rand(0, H), r: rand(0.5, 1.6), a: rand(0.08, 0.2), vx: rand(-0.05, 0.05), vy: rand(-0.04, 0.04) });
-    for(i = 0; i < nv; i++) voids.push({ x: rand(0, W), y: rand(0, H), r: rand(2.5, 6), vx: rand(-0.05, 0.05), vy: rand(-0.04, 0.04) });
+    for(i = 0; i < ng; i++) sand.push({ x: rand(0, W), y: rand(0, H), r: rand(0.5, 1.6), a: rand(0.08, 0.2), vx: rand(-0.05, 0.05) * SPEED, vy: rand(-0.04, 0.04) * SPEED });
+    for(i = 0; i < nv; i++) voids.push({ x: rand(0, W), y: rand(0, H), r: rand(2.5, 6), vx: rand(-0.05, 0.05) * SPEED, vy: rand(-0.04, 0.04) * SPEED });
   }
   function resize(){
     var rect = hero.getBoundingClientRect();
