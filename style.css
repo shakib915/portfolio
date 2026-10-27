@@ -380,3 +380,4 @@
   .edu-body{min-width:0;}
   @media (max-width:560px){ .edu-card.with-logo{grid-template-columns:48px 1fr; gap:0 14px;} .edu-logo{width:48px; height:48px;} }
   .ielts-note{font-size:14px; color:var(--text-muted); margin:14px 0 0;}
+  .status.accepted{background:color-mix(in srgb, var(--brand) 14%, transparent); color:var(--brand);}
