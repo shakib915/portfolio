@@ -36,15 +36,55 @@
       var rr = r * rand(0.62, 1.0);
       pts.push([Math.cos(ang) * rr, Math.sin(ang) * rr * rand(0.7, 1)]);
     }
-    return { x: rand(0, W), y: rand(0, H), r: r, pts: pts, rot: rand(0, Math.PI * 2),
+    var cr = 0;
+    for(i = 0; i < pts.length; i++){ cr = Math.max(cr, Math.sqrt(pts[i][0] * pts[i][0] + pts[i][1] * pts[i][1])); }
+    return { x: rand(0, W), y: rand(0, H), r: r, cr: cr * 0.9, m: r * r, pts: pts, rot: rand(0, Math.PI * 2),
              vr: rand(-0.0012, 0.0012) * SPEED, vx: rand(-0.09, 0.09) * SPEED, vy: rand(-0.06, 0.06) * SPEED,
              fill: rand(0.045, 0.1), edge: rand(0.08, 0.16), accent: Math.random() < 0.12 };
+  }
+  function overlapsAny(a){
+    for(var k = 0; k < stones.length; k++){
+      var b = stones[k], dx = b.x - a.x, dy = b.y - a.y, rr = a.cr + b.cr + 2;
+      if(dx * dx + dy * dy < rr * rr) return true;
+    }
+    return false;
+  }
+  // stones bounce off each other: elastic collision between their bounding circles
+  function collide(){
+    for(var i = 0; i < stones.length; i++){
+      var a = stones[i];
+      for(var j = i + 1; j < stones.length; j++){
+        var b = stones[j], dx = b.x - a.x, dy = b.y - a.y, rr = a.cr + b.cr;
+        if(Math.abs(dx) > rr || Math.abs(dy) > rr) continue;
+        var d2 = dx * dx + dy * dy;
+        if(d2 >= rr * rr || d2 === 0) continue;
+        var d = Math.sqrt(d2), nx = dx / d, ny = dy / d;
+        // push apart so they no longer overlap
+        var overlap = rr - d, tm = a.m + b.m;
+        a.x -= nx * overlap * (b.m / tm); a.y -= ny * overlap * (b.m / tm);
+        b.x += nx * overlap * (a.m / tm); b.y += ny * overlap * (a.m / tm);
+        // exchange momentum along the line between centres (only if moving toward each other)
+        var rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+        if(rv < 0){
+          var imp = -2 * rv / tm;
+          a.vx -= imp * b.m * nx; a.vy -= imp * b.m * ny;
+          b.vx += imp * a.m * nx; b.vy += imp * a.m * ny;
+          // a small spin kick so the impact reads as a knock
+          a.vr += (Math.random() - 0.5) * 0.004; b.vr += (Math.random() - 0.5) * 0.004;
+          a.vr = Math.max(-0.006, Math.min(0.006, a.vr)); b.vr = Math.max(-0.006, Math.min(0.006, b.vr));
+        }
+      }
+    }
   }
   function build(){
     var area = W * H;
     stones = []; sand = []; voids = [];
     var ns = Math.round(area / 11000), ng = Math.round(area / 1400), nv = Math.round(area / 60000);
-    for(var i = 0; i < ns; i++) stones.push(makeStone());
+    for(var i = 0; i < ns; i++){
+      var st = makeStone(), tries = 0;
+      while(tries++ < 40 && overlapsAny(st)){ st.x = rand(0, W); st.y = rand(0, H); }
+      stones.push(st);
+    }
     for(i = 0; i < ng; i++) sand.push({ x: rand(0, W), y: rand(0, H), r: rand(0.5, 1.6), a: rand(0.08, 0.2), vx: rand(-0.05, 0.05) * SPEED, vy: rand(-0.04, 0.04) * SPEED });
     for(i = 0; i < nv; i++) voids.push({ x: rand(0, W), y: rand(0, H), r: rand(2.5, 6), vx: rand(-0.05, 0.05) * SPEED, vy: rand(-0.04, 0.04) * SPEED });
   }
@@ -89,6 +129,7 @@
   function step(){
     var i, p;
     for(i = 0; i < stones.length; i++){ p = stones[i]; p.x += p.vx; p.y += p.vy; p.rot += p.vr; wrap(p, p.r + 4); }
+    collide();
     for(i = 0; i < sand.length; i++){ p = sand[i]; p.x += p.vx; p.y += p.vy; wrap(p, 2); }
     for(i = 0; i < voids.length; i++){ p = voids[i]; p.x += p.vx; p.y += p.vy; wrap(p, 8); }
     draw();
