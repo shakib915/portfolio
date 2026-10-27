@@ -7,7 +7,7 @@
   var ctx = canvas.getContext('2d');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var SPEED = 1.6;   // drift speed multiplier (1 = original pace)
+  var SPEED = 2.3;   // drift speed multiplier (1 = original pace)
   var W = 0, H = 0, stones = [], sand = [], voids = [], colors = {}, running = false, visible = true, raf = 0;
 
   function hexToRgb(h){
@@ -36,9 +36,10 @@
       var rr = r * rand(0.62, 1.0);
       pts.push([Math.cos(ang) * rr, Math.sin(ang) * rr * rand(0.7, 1)]);
     }
+    pts = hull(pts);
     var cr = 0;
     for(i = 0; i < pts.length; i++){ cr = Math.max(cr, Math.sqrt(pts[i][0] * pts[i][0] + pts[i][1] * pts[i][1])); }
-    return { x: rand(0, W), y: rand(0, H), r: r, cr: cr * 0.9, m: r * r, pts: pts, rot: rand(0, Math.PI * 2),
+    return { x: rand(0, W), y: rand(0, H), r: r, cr: cr, m: r * r, pts: pts, rot: rand(0, Math.PI * 2),
              vr: rand(-0.0012, 0.0012) * SPEED, vx: rand(-0.09, 0.09) * SPEED, vy: rand(-0.06, 0.06) * SPEED,
              fill: rand(0.045, 0.1), edge: rand(0.08, 0.16), accent: Math.random() < 0.12 };
   }
@@ -49,27 +50,70 @@
     }
     return false;
   }
-  // stones bounce off each other: elastic collision between their bounding circles
+  // convex hull (monotone chain) of a stone's outline
+  function hull(pts){
+    var p = pts.slice().sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
+    function cross(o, a, b){ return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }
+    var lo = [], up = [], i;
+    for(i = 0; i < p.length; i++){ while(lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p[i]) <= 0) lo.pop(); lo.push(p[i]); }
+    for(i = p.length - 1; i >= 0; i--){ while(up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p[i]) <= 0) up.pop(); up.push(p[i]); }
+    up.pop(); lo.pop();
+    return lo.concat(up);
+  }
+  // a stone's outline in page coordinates
+  function worldPts(st){
+    var c = Math.cos(st.rot), sn = Math.sin(st.rot), out = [];
+    for(var k = 0; k < st.pts.length; k++){
+      var px = st.pts[k][0], py = st.pts[k][1];
+      out.push([st.x + px * c - py * sn, st.y + px * sn + py * c]);
+    }
+    return out;
+  }
+  // separating-axis test: returns {nx, ny, depth} pointing from A to B, or null if the outlines don't touch
+  function contact(A, B, ax, ay, bx, by){
+    var best = Infinity, bnx = 0, bny = 0, polys = [A, B];
+    for(var q = 0; q < 2; q++){
+      var P = polys[q];
+      for(var k = 0; k < P.length; k++){
+        var p1 = P[k], p2 = P[(k + 1) % P.length];
+        var ex = p2[0] - p1[0], ey = p2[1] - p1[1], len = Math.sqrt(ex * ex + ey * ey);
+        if(len === 0) continue;
+        var nx = -ey / len, ny = ex / len;
+        var minA = Infinity, maxA = -Infinity, minB = Infinity, maxB = -Infinity, t, m;
+        for(m = 0; m < A.length; m++){ t = A[m][0] * nx + A[m][1] * ny; if(t < minA) minA = t; if(t > maxA) maxA = t; }
+        for(m = 0; m < B.length; m++){ t = B[m][0] * nx + B[m][1] * ny; if(t < minB) minB = t; if(t > maxB) maxB = t; }
+        var o = Math.min(maxA, maxB) - Math.max(minA, minB);
+        if(o <= 0) return null;
+        if(o < best){ best = o; bnx = nx; bny = ny; }
+      }
+    }
+    if((bx - ax) * bnx + (by - ay) * bny < 0){ bnx = -bnx; bny = -bny; }
+    return { nx: bnx, ny: bny, depth: best };
+  }
+  // stones bounce off each other when their outlines touch
   function collide(){
-    for(var i = 0; i < stones.length; i++){
+    var W8 = [];
+    for(var i = 0; i < stones.length; i++) W8[i] = null;
+    for(i = 0; i < stones.length; i++){
       var a = stones[i];
       for(var j = i + 1; j < stones.length; j++){
         var b = stones[j], dx = b.x - a.x, dy = b.y - a.y, rr = a.cr + b.cr;
-        if(Math.abs(dx) > rr || Math.abs(dy) > rr) continue;
-        var d2 = dx * dx + dy * dy;
-        if(d2 >= rr * rr || d2 === 0) continue;
-        var d = Math.sqrt(d2), nx = dx / d, ny = dy / d;
-        // push apart so they no longer overlap
-        var overlap = rr - d, tm = a.m + b.m;
-        a.x -= nx * overlap * (b.m / tm); a.y -= ny * overlap * (b.m / tm);
-        b.x += nx * overlap * (a.m / tm); b.y += ny * overlap * (a.m / tm);
-        // exchange momentum along the line between centres (only if moving toward each other)
+        if(Math.abs(dx) > rr || Math.abs(dy) > rr || dx * dx + dy * dy >= rr * rr) continue;
+        if(!W8[i]) W8[i] = worldPts(a);
+        if(!W8[j]) W8[j] = worldPts(b);
+        var c = contact(W8[i], W8[j], a.x, a.y, b.x, b.y);
+        if(!c) continue;
+        var nx = c.nx, ny = c.ny, tm = a.m + b.m;
+        // push apart along the contact normal so the edges just touch
+        a.x -= nx * c.depth * (b.m / tm); a.y -= ny * c.depth * (b.m / tm);
+        b.x += nx * c.depth * (a.m / tm); b.y += ny * c.depth * (a.m / tm);
+        W8[i] = null; W8[j] = null;
+        // exchange momentum along the normal (only if moving toward each other)
         var rv = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
         if(rv < 0){
           var imp = -2 * rv / tm;
           a.vx -= imp * b.m * nx; a.vy -= imp * b.m * ny;
           b.vx += imp * a.m * nx; b.vy += imp * a.m * ny;
-          // a small spin kick so the impact reads as a knock
           a.vr += (Math.random() - 0.5) * 0.004; b.vr += (Math.random() - 0.5) * 0.004;
           a.vr = Math.max(-0.006, Math.min(0.006, a.vr)); b.vr = Math.max(-0.006, Math.min(0.006, b.vr));
         }
